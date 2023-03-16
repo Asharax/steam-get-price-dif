@@ -1,51 +1,30 @@
-<!-- This is a static file -->
-<!-- served from your routes in server.js -->
-
-<!-- You might want to try something fancier: -->
-<!-- html/nunjucks docs: http://mozilla.github.io/nunjucks/ -->
-<!-- jade: http://jade-lang.com/ -->
-<!-- haml: http://haml.info/tutorial.html -->
-<!-- hbs(handlebars): http://handlebarsjs.com/expressions.html -->
-
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>414Welcome to Glitch!</title>
-    <meta name="description" content="A cool thing made with Glitch" />
-    <link
-      id="favicon"
-      rel="icon"
-      href="https://gomix.com/favicon-app.ico"
-      type="image/x-icon"
-    />
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="/public/style.css" />
-  </head>
-  <body>
-    <header>
-      <h1>A Dream of the Future 123</h1>
-    </header>
+<head>
+	<title>Find steam currency dif!</title>
+	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/semantic-ui/dist/semantic.min.css">
+	<style type="text/css">
+		.container {
+			margin-top: 20px;
+		}
+	</style>
+</head>
+<body>
+	<div class="ui container">
+		<h1 class="ui dividing header">Steam-like Flask Website</h1>
+		<form class="ui form" method="POST">
+			<div class="field">
+				<label>Select a Genre:</label>
+				<select name="genre" class="ui dropdown">
+					<option value="">Choose a genre</option>
+					<option value="souls-like">Souls-like</option>
+				</select>
+			</div>
+			<button class="ui button primary" type="submit">Send</button>
+		</form>
+	</div>
 
-    <main>
-      <p class="bold">Oh hi,</p>
-      <p>Tell me your hopes and dreams:</p>
-      <form>
-        <input type="text" maxlength="100" placeholder="1Dreams!" />
-        <button type="submit">Submit</button>
-      </form>
-      <section class="dreams">
-        <ul id="dreams"></ul>
-      </section>
-    </main>
-
-    <!-- Your web-app is https, so your scripts need to be too -->
-    <script
-      src="https://code.jquery.com/jquery-2.2.1.min.js"
-      integrity="sha256-gvQgAFzTH6trSrAWoH1iPo9Xc96QxSZ3feW6kem+O00="
-      crossorigin="anonymous"
-    ></script>
-    <script src="/public/client.js"></script>
-  </body>
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/semantic-ui/dist/semantic.min.js"></script>
+</body>
 </html>
