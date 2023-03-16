@@ -20,9 +20,8 @@ DEFAULT_PARAMS = {
 }
 
 
-
 def get_currency_price(region, appid):
-    url = f'https://store.steampowered.com/api/appdetails?appids={appid}&cc={region}'
+    url = 'https://store.steampowered.com/api/appdetails?appids=%s&cc=%s' % (appid, region)
     response = requests.get(url)
     data = json.loads(response.content)
     return get_final_price(data[str(appid)])
@@ -126,7 +125,7 @@ def make_request(url, params=None):
         return response
     except requests.exceptions.RequestException as e:
         # Log any error with the request
-        logging.error(f'Error making request: {e}')
+        logging.error('Error making request: %s' % e)
 
 
 def parse_json(response):
@@ -149,7 +148,7 @@ def parse_json(response):
         return data
     except json.decoder.JSONDecodeError as e:
         # Log any error decoding JSON data
-        logging.error(f'Error parsing JSON: {e}')
+        logging.error('Error parsing JSON: %s', e)
 
 # Call the function with some tags
 games = get_games_from_tag('souls-like')
