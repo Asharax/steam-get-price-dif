@@ -7,6 +7,7 @@ Snapshot of steam price differences on Spring Sale 2023. (Calculated for Turkish
 
 
 You can set filters, and sort the table on the notion page bellow: 
+
 https://faytan.notion.site/c2b72e79ca964000bd647f1652c838c8
 
 Todos: 
