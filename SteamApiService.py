@@ -6,22 +6,11 @@ import os
 error_logs = []
 
 # Define constants for API URL and key
-API_URL = 'https://api.rawg.io/api/games'
 STEAM_API_URL = 'https://api.steampowered.com/IWishlistService/GetWishlist/v1/'
-API_KEY = os.environ.get('SECRET_KEY')
 
 STEAM_API_KEY = os.environ.get('STEAM_API_KEY')
 STEAM_IMG_BASE_URL = "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/"
 STEAM_IMG_SUFFIX = "/capsule_616x353.jpg"
-
-# Define default parameters for API request
-RAWG_PARAMS = {
-    'page_size': 40,
-    'page': 1,
-    'stores': 1,
-    'ordering': 'rating -released',
-    'ratings_count': 1,
-}
 
 
 def get_currency_price(region, appid):
@@ -88,48 +77,6 @@ def get_wishlisted_result_from_user(steamid):
     return None
 
 
-def get_games_from_tag(tags):
-    """Fetches a list of game names from RAWG API based on tags.
-
-    Args:
-        tags (str): A comma-separated string of tags to filter games by.
-
-    Returns:
-        list[str]: A list of game names matching the tags.
-    """
-    # Add tags and key to the default parameters
-    params = RAWG_PARAMS.copy()
-    params['tags'] = tags
-    params['key'] = API_KEY
-
-    # Initialize an empty list to store game names
-    game_names = []
-
-    # Make the first request with the given parameters
-    response = make_request(API_URL, params)
-
-    # Loop until there are no more pages to fetch
-    while response:
-        # Parse the JSON data from the response
-        data = parse_json(response)
-
-        # Extract the game names from the results and append them to the list
-        for result in data['results']:
-            game_names.append(result['name'])
-
-        # Check if there is a next page URL in the data
-        next_url = data.get('next')
-
-        if next_url:
-            # Make another request with the next page URL
-            response = make_request(next_url)
-        else:
-            # Break out of the loop if there is no next page URL
-            break
-
-    return game_names
-
-
 def make_request(url, params=None):
     """Makes a GET request to a given URL with optional parameters.
 
@@ -180,9 +127,6 @@ def parse_json(response):
         # Log any error decoding JSON data
         logging.error('Error parsing JSON: %s', e)
         return None
-
-# Call the function with some tags
-#games = get_games_from_tag('souls-like')
 
 GAME_DETAIL_MAP = {}
 
