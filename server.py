@@ -9,7 +9,7 @@ import SteamApiService
 app = Flask(__name__, static_folder='public', template_folder='views')
 
 # Set the app secret key from the secret environment variables.
-app.secret = os.environ.get('SECRET')
+app.secret = "749580705f7e4f5ebccc99c52c4823fe" # os.environ.get('SECRET')
 print("app.secret")
 print(app.secret)
 print("app")

@@ -1,14 +1,11 @@
+# write a program that creates getsuga tensho in pygame
 import json
 import requests
 import logging
-import os
-
-error_logs = []
 
 # Define constants for API URL and key
 API_URL = 'https://api.rawg.io/api/games'
-API_KEY = '749580705f7e4f5ebccc99c52c4823fe' # os.environ.get('SECRET_KEY')
-
+API_KEY = "749580705f7e4f5ebccc99c52c4823fe"
 
 # Define default parameters for API request
 DEFAULT_PARAMS = {
@@ -18,45 +15,6 @@ DEFAULT_PARAMS = {
     'ordering': 'rating -released',
     'ratings_count': 1,
 }
-
-
-def get_currency_price(region, appid):
-    url = 'https://store.steampowered.com/api/appdetails?appids=%s&cc=%s' % (appid, region)
-    response = requests.get(url)
-    data = json.loads(response.content)
-    return get_final_price(data[str(appid)])
-
-
-def get_final_price(data):
-    try:
-        return data['data']['price_overview']['final'] / 100
-    except KeyError:
-        error_logs.append(data['data'])
-        print("KeyError")
-        print(KeyError)
-        return 0
-
-
-def percentage_difference(europe_price: float, turkey_price: float) -> float:
-    if europe_price == 0 or turkey_price == 0:
-        print("Price is 0")
-        print("europe_price")
-        print(europe_price)
-        print("turkey_price")
-        print(turkey_price)
-        return 0
-    return (europe_price - turkey_price) / turkey_price * 100
-
-
-def get_over_price_amount(appid):
-    tl = get_currency_price("tr", appid)
-    usd = get_currency_price("us", appid) * 18.98
-    result = percentage_difference(usd, tl)
-    if result == 0:
-        error_logs.append(appid)
-
-    # print(f"The game is {result:.2f}% more expensive in USD.")
-    return result
 
 
 def get_games_from_tag(tags):
@@ -125,7 +83,7 @@ def make_request(url, params=None):
         return response
     except requests.exceptions.RequestException as e:
         # Log any error with the request
-        logging.error('Error making request: %s' % e)
+        logging.error(f'Error making request: {e}')
 
 
 def parse_json(response):
@@ -148,11 +106,4 @@ def parse_json(response):
         return data
     except json.decoder.JSONDecodeError as e:
         # Log any error decoding JSON data
-        logging.error('Error parsing JSON: %s', e)
-
-# Call the function with some tags
-games = get_games_from_tag('souls-like')
-get_over_price_amount()
-
-# Print the list of game names
-print(games)
+        logging.error(f'Error parsing JSON: {e}')
