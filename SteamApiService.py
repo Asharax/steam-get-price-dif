@@ -25,8 +25,7 @@ def get_final_price(data):
         return data['data']['price_overview']['final'] / 100
     except KeyError:
         error_logs.append(data['data'])
-        print("KeyError")
-        print(KeyError)
+        print("Skipped game without price")
         return 0
 
 
@@ -48,7 +47,6 @@ def get_over_price_amount(appid):
     if result == 0:
         error_logs.append(appid)
 
-    # print(f"The game is {result:.2f}% more expensive in USD.")
     return {'price_difference': result, 'regional_price': tl, 'global_price': usd}
 
 # Calculates price difference between regional prices and global prices
