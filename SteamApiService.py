@@ -7,11 +7,15 @@ error_logs = []
 
 # Define constants for API URL and key
 API_URL = 'https://api.rawg.io/api/games'
+STEAM_API_URL = 'https://api.steampowered.com/IWishlistService/GetWishlist/v1/'
 API_KEY = os.environ.get('SECRET_KEY')
 
+STEAM_API_KEY = os.environ.get('STEAM_API_KEY')
+STEAM_IMG_BASE_URL = "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/"
+STEAM_IMG_SUFFIX = "/capsule_616x353.jpg"
 
 # Define default parameters for API request
-DEFAULT_PARAMS = {
+RAWG_PARAMS = {
     'page_size': 40,
     'page': 1,
     'stores': 1,
@@ -50,13 +54,38 @@ def percentage_difference(europe_price: float, turkey_price: float) -> float:
 
 def get_over_price_amount(appid):
     tl = get_currency_price("tr", appid)
-    usd = get_currency_price("us", appid) * 18.98
+    usd = get_currency_price("us", appid)
     result = percentage_difference(usd, tl)
     if result == 0:
         error_logs.append(appid)
 
     # print(f"The game is {result:.2f}% more expensive in USD.")
-    return result
+    return {'price_difference': result, 'regional_price': tl, 'global_price': usd}
+
+# Calculates price difference between regional prices and global prices
+# of a game using its steamid, along with other details.
+def get_wishlisted_result_from_user(steamid):
+    steam_params = {
+        'steamid': steamid,
+        'key': STEAM_API_KEY
+    }
+
+    wish_list_request = make_request(STEAM_API_URL, steam_params)
+    response = []
+
+    if wish_list_request:
+        data = parse_json(wish_list_request)
+
+        wish_listed_games = data['response']['items']
+
+        for game in wish_listed_games:
+            game_id = game['appid']
+            game_details = get_over_price_amount(game_id)
+            game_details['image'] = STEAM_IMG_BASE_URL + str(game_id) + STEAM_IMG_SUFFIX
+            game_details['name'] = GAME_DETAIL_MAP[game_id]
+            response.append(game_details)
+        return response
+    return None
 
 
 def get_games_from_tag(tags):
@@ -69,7 +98,7 @@ def get_games_from_tag(tags):
         list[str]: A list of game names matching the tags.
     """
     # Add tags and key to the default parameters
-    params = DEFAULT_PARAMS.copy()
+    params = RAWG_PARAMS.copy()
     params['tags'] = tags
     params['key'] = API_KEY
 
@@ -126,6 +155,7 @@ def make_request(url, params=None):
     except requests.exceptions.RequestException as e:
         # Log any error with the request
         logging.error('Error making request: %s' % e)
+        return None
 
 
 def parse_json(response):
@@ -149,9 +179,19 @@ def parse_json(response):
     except json.decoder.JSONDecodeError as e:
         # Log any error decoding JSON data
         logging.error('Error parsing JSON: %s', e)
+        return None
 
 # Call the function with some tags
-games = get_games_from_tag('souls-like')
+#games = get_games_from_tag('souls-like')
 
-# Print the list of game names
-print(games)
+GAME_DETAIL_MAP = {}
+
+# Open and read the JSON file
+with open('game_names.json', 'r') as file:
+    game_detail_list = json.load(file)['applist']['apps']
+    for game_detail in game_detail_list:
+        appid = game_detail['appid']
+        GAME_DETAIL_MAP[appid] = game_detail.pop('name')
+
+print(get_wishlisted_result_from_user(76561198174491595))
+
