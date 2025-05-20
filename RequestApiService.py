@@ -2,10 +2,11 @@
 import json
 import requests
 import logging
+import os
 
 # Define constants for API URL and key
 API_URL = 'https://api.rawg.io/api/games'
-API_KEY = "749580705f7e4f5ebccc99c52c4823fe"
+API_KEY = os.environ.get('SECRET_KEY')
 
 # Define default parameters for API request
 DEFAULT_PARAMS = {
