@@ -7,7 +7,7 @@ error_logs = []
 
 # Define constants for API URL and key
 API_URL = 'https://api.rawg.io/api/games'
-API_KEY = '749580705f7e4f5ebccc99c52c4823fe' # os.environ.get('SECRET_KEY')
+API_KEY = os.environ.get('SECRET_KEY')
 
 
 # Define default parameters for API request
