@@ -69,7 +69,7 @@ def get_wishlisted_result_from_user(steamid, regional_currency):
             game_id = game['appid']
             game_details = get_over_price_amount(game_id, regional_currency)
             game_details['image'] = STEAM_IMG_BASE_URL + str(game_id) + STEAM_IMG_SUFFIX
-            game_details['name'] = GAME_DETAIL_MAP[game_id]
+            game_details['name'] = GAME_DETAIL_MAP.get(game_id, "UNKNOWN")
             response.append(game_details)
         return response
     return None
