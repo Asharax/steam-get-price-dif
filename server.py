@@ -21,7 +21,7 @@ def homepage():
 def submit():
     """returns the price difference.
     """
-    data = SteamApiService.get_wishlisted_result_from_user(76561198174491595)()
+    data = SteamApiService.get_wishlisted_result_from_user(76561198174491595, "tr")()
     # Return the list of remembered dreams.
     return jsonify(data)
 

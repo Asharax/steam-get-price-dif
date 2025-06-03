@@ -29,29 +29,29 @@ def get_final_price(data):
         return 0
 
 
-def percentage_difference(europe_price: float, turkey_price: float) -> float:
-    if europe_price == 0 or turkey_price == 0:
+def percentage_difference(europe_price: float, regional_price: float) -> float:
+    if europe_price == 0 or regional_price == 0:
         print("Price is 0")
         print("europe_price")
         print(europe_price)
-        print("turkey_price")
-        print(turkey_price)
+        print("regional_price")
+        print(regional_price)
         return 0
-    return (europe_price - turkey_price) / turkey_price * 100
+    return (europe_price - regional_price) / regional_price * 100
 
 
-def get_over_price_amount(appid):
-    tl = get_currency_price("tr", appid)
-    usd = get_currency_price("us", appid)
-    result = percentage_difference(usd, tl)
+def get_over_price_amount(appid, regional_curency="tr"):
+    regional_price = get_currency_price(regional_curency, appid)
+    usd_price = get_currency_price("us", appid)
+    result = percentage_difference(usd_price, regional_price)
     if result == 0:
         error_logs.append(appid)
 
-    return {'price_difference': result, 'regional_price': tl, 'global_price': usd}
+    return {'price_difference': result, 'regional_price': regional_price, 'usd_price': usd_price}
 
 # Calculates price difference between regional prices and global prices
 # of a game using its steamid, along with other details.
-def get_wishlisted_result_from_user(steamid):
+def get_wishlisted_result_from_user(steamid, regional_currency):
     steam_params = {
         'steamid': steamid,
         'key': STEAM_API_KEY
@@ -67,7 +67,7 @@ def get_wishlisted_result_from_user(steamid):
 
         for game in wish_listed_games:
             game_id = game['appid']
-            game_details = get_over_price_amount(game_id)
+            game_details = get_over_price_amount(game_id, regional_currency)
             game_details['image'] = STEAM_IMG_BASE_URL + str(game_id) + STEAM_IMG_SUFFIX
             game_details['name'] = GAME_DETAIL_MAP[game_id]
             response.append(game_details)
@@ -135,5 +135,4 @@ with open('game_names.json', 'r') as file:
         appid = game_detail['appid']
         GAME_DETAIL_MAP[appid] = game_detail.pop('name')
 
-print(get_wishlisted_result_from_user(76561198174491595))
-
+print(get_wishlisted_result_from_user(76561198174491595, "tr"))
