@@ -1,30 +1,146 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>Find steam currency dif!</title>
-	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/semantic-ui/dist/semantic.min.css">
-	<style type="text/css">
-		.container {
-			margin-top: 20px;
-		}
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam Games Table</title>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+        img {
+            width: 184px;
+            height: 86px;
+            object-fit: cover;
+        }
+    </style>
 </head>
 <body>
-	<div class="ui container">
-		<h1 class="ui dividing header">Steam-like Flask Website</h1>
-		<form class="ui form" method="POST">
-			<div class="field">
-				<label>Select a Genre:</label>
-				<select name="genre" class="ui dropdown">
-					<option value="">Choose a genre</option>
-					<option value="souls-like">Souls-like</option>
-				</select>
-			</div>
-			<button class="ui button primary" type="submit">Send</button>
-		</form>
-	</div>
+    <h1>Steam Games</h1>
+    <form id="priceDiffForm" method="post" action="/">
+        <label for="steamIdInput">Steam ID:</label>
+        <input type="text" id="steamIdInput" name="steam_id" required placeholder="Enter Steam ID">
+        <button type="submit">Get Price Difference</button>
+    </form>
+    <div id="loadingBarContainer" style="width:100%;background:#eee;height:20px;display:none;margin:10px 0;">
+        <div id="loadingBar" style="height:100%;width:0;background:#4caf50;text-align:center;color:white;line-height:20px;"></div>
+    </div>
+    <br>
+    <table id="gamesTable" class="display">
+        <thead>
+            <tr>
+                <th>Game Image</th>
+                <th>Name</th>
+                <th>Regional Price ($)</th>
+                <th>Global Price ($)</th>
+                <th>Price Difference % ($)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for game in games %}
+            <tr>
+                <td><img src="{{ game.image }}" alt="{{ game.name }}"></td>
+                <td>{{ game.name }}</td>
+                <td>{{ game.regional_price }}</td>
+                <td>{{ game.usd_price }}</td>
+                <td>{{ game.price_difference }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-	<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/semantic-ui/dist/semantic.min.js"></script>
+    <script>
+        var eventSource;
+        function updateTable(games) {
+            var table = $('#gamesTable').DataTable();
+            table.clear();
+            games.forEach(function(game) {
+                table.row.add([
+                    '<img src="' + game.image + '" alt="' + game.name + '">',
+                    game.name,
+                    game.regional_price,
+                    game.usd_price,
+                    game.price_difference
+                ]);
+            });
+            table.draw();
+        }
+
+        function showLoadingBar() {
+            $('#loadingBarContainer').show();
+            $('#loadingBar').css('width', '0').text('0%');
+        }
+        function updateLoadingBar(percent) {
+            $('#loadingBar').css('width', percent + '%').text(percent + '%');
+        }
+        function hideLoadingBar() {
+            $('#loadingBarContainer').hide();
+        }
+
+        function startProgressSSE() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            eventSource = new EventSource('/progress');
+            eventSource.onmessage = function(event) {
+                var percent = parseInt(event.data);
+                updateLoadingBar(percent);
+                if (percent >= 100) {
+                    setTimeout(hideLoadingBar, 500);
+                    eventSource.close();
+                }
+            };
+        }
+
+        $(document).ready(function() {
+            $('#gamesTable').DataTable({
+                "order": [[1, "asc"]], // Default sort by Name
+                "columnDefs": [
+                    { "orderable": false, "targets": 0 } // Disable sorting on image column
+                ]
+            });
+
+            // Handle form submission
+            $('#priceDiffForm').on('submit', function(e) {
+                e.preventDefault();
+                showLoadingBar();
+                startProgressSSE();
+                const steamId = $('#steamIdInput').val();
+                $.ajax({
+                    url: '/',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ steam_id: steamId }),
+                    success: function(response) {
+                        updateTable(response);
+                    },
+                    error: function() {
+                        hideLoadingBar();
+                        alert('Error fetching price difference data.');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

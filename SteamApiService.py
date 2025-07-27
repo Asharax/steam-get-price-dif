@@ -10,14 +10,24 @@ STEAM_API_URL = 'https://api.steampowered.com/IWishlistService/GetWishlist/v1/'
 
 STEAM_API_KEY = os.environ.get('STEAM_API_KEY')
 STEAM_IMG_BASE_URL = "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/"
-STEAM_IMG_SUFFIX = "/capsule_616x353.jpg"
+STEAM_IMG_SUFFIX = "/header.jpg"
 
 
 def get_currency_price(region, appid):
     url = 'https://store.steampowered.com/api/appdetails?appids=%s&cc=%s' % (appid, region)
-    response = requests.get(url)
-    data = json.loads(response.content)
-    return get_final_price(data[str(appid)])
+    try:
+        response = requests.get(url)
+
+        # Check if the status code indicates success
+        response.raise_for_status()
+
+        data = json.loads(response.content)
+        return get_final_price(data[str(appid)])
+    except requests.exceptions.RequestException as e:
+        # Log any error with the request
+        logging.error('Error making request: %s' % e)
+        return -1
+
 
 
 def get_final_price(data):
@@ -29,15 +39,10 @@ def get_final_price(data):
         return 0
 
 
-def percentage_difference(europe_price: float, regional_price: float) -> float:
-    if europe_price == 0 or regional_price == 0:
-        print("Price is 0")
-        print("europe_price")
-        print(europe_price)
-        print("regional_price")
-        print(regional_price)
+def percentage_difference(global_price: float, regional_price: float) -> float:
+    if global_price == 0 or regional_price == 0:
         return 0
-    return (europe_price - regional_price) / regional_price * 100
+    return round((global_price - regional_price) / regional_price * 100, 2)
 
 
 def get_over_price_amount(appid, regional_curency="tr"):
@@ -51,7 +56,7 @@ def get_over_price_amount(appid, regional_curency="tr"):
 
 # Calculates price difference between regional prices and global prices
 # of a game using its steamid, along with other details.
-def get_wishlisted_result_from_user(steamid, regional_currency):
+def get_wishlisted_result_from_user(steamid, regional_currency, progress_callback=None):
     steam_params = {
         'steamid': steamid,
         'key': STEAM_API_KEY
@@ -60,19 +65,27 @@ def get_wishlisted_result_from_user(steamid, regional_currency):
     wish_list_request = make_request(STEAM_API_URL, steam_params)
     response = []
 
-    if wish_list_request:
-        data = parse_json(wish_list_request)
+    if not wish_list_request:
+        return None
+    data = parse_json(wish_list_request)
 
-        wish_listed_games = data['response']['items']
+    wish_listed_games = data['response']['items']
 
-        for game in wish_listed_games:
-            game_id = game['appid']
-            game_details = get_over_price_amount(game_id, regional_currency)
-            game_details['image'] = STEAM_IMG_BASE_URL + str(game_id) + STEAM_IMG_SUFFIX
-            game_details['name'] = GAME_DETAIL_MAP.get(game_id, "UNKNOWN")
+    game_request_limit = 5
+    total = min(game_request_limit, len(wish_listed_games))
+    for idx,game in enumerate(wish_listed_games):
+        if idx>=game_request_limit:
+            break
+        game_id = game['appid']
+        game_details = get_over_price_amount(game_id, regional_currency)
+        game_details['image'] = STEAM_IMG_BASE_URL + str(game_id) + STEAM_IMG_SUFFIX
+        game_details['name'] = GAME_DETAIL_MAP.get(game_id, "UNKNOWN")
+        if game_details["usd_price"] != 0:
             response.append(game_details)
-        return response
-    return None
+        if progress_callback:
+            percent = int(((idx+1)/total)*100)
+            progress_callback(percent)
+    return response
 
 
 def make_request(url, params=None):
@@ -101,6 +114,7 @@ def make_request(url, params=None):
         # Log any error with the request
         logging.error('Error making request: %s' % e)
         return None
+
 
 
 def parse_json(response):
@@ -134,5 +148,3 @@ with open('game_names.json', 'r') as file:
     for game_detail in game_detail_list:
         appid = game_detail['appid']
         GAME_DETAIL_MAP[appid] = game_detail.pop('name')
-
-print(get_wishlisted_result_from_user(76561198174491595, "tr"))
