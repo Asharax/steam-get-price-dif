@@ -36,39 +36,61 @@
     </style>
 </head>
 <body>
-    <h1>Steam Games</h1>
-    <form id="priceDiffForm" method="post" action="/">
-        <label for="steamIdInput">Steam ID:</label>
-        <input type="text" id="steamIdInput" name="steam_id" required placeholder="Enter Steam ID">
-        <button type="submit">Get Price Difference</button>
-    </form>
-    <div id="loadingBarContainer" style="width:100%;background:#eee;height:20px;display:none;margin:10px 0;">
-        <div id="loadingBar" style="height:100%;width:0;background:#4caf50;text-align:center;color:white;line-height:20px;"></div>
-    </div>
-    <br>
-    <table id="gamesTable" class="display">
-        <thead>
-            <tr>
-                <th>Game Image</th>
-                <th>Name</th>
-                <th>Regional Price ($)</th>
-                <th>Global Price ($)</th>
-                <th>Price Difference % ($)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for game in games %}
-            <tr>
-                <td><img src="{{ game.image }}" alt="{{ game.name }}"></td>
-                <td>{{ game.name }}</td>
-                <td>{{ game.regional_price }}</td>
-                <td>{{ game.usd_price }}</td>
-                <td>{{ game.price_difference }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
+    <header class="main-header hero-bg">
+        <div class="container hero-content">
+            <h1><span class="logo">🎮</span> Steam Wishlist Price Difference Checker</h1>
+            <p class="subtitle">Instantly compare Steam game prices across regions and save money on your next purchase.</p>
+        </div>
+    </header>
+    <main class="container">
+        <div class="card pro-card" id="price-check">
+            <form id="priceDiffForm" class="form-inline" method="post" action="/">
+                <label for="steamIdInput"><span class="input-icon">🔎</span> Steam ID:</label>
+                <input type="text" id="steamIdInput" name="steam_id" required placeholder="Enter Steam ID">
+                <button type="submit"><span class="btn-icon">💡</span> Get Price Difference</button>
+            </form>
+            <div id="loadingBarContainer" class="loading-bar-container">
+                <div id="loadingBar" class="loading-bar"></div>
+            </div>
+            <div class="table-responsive">
+                <table id="gamesTable" class="display modern-table pro-table">
+                    <thead>
+                        <tr>
+                            <th>Game Image</th>
+                            <th>Name</th>
+                            <th>Regional Price ($)</th>
+                            <th>Global Price ($)</th>
+                            <th>Price Difference % ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for game in games %}
+                        <tr>
+                            <td><img src="{{ game.image }}" alt="{{ game.name }}" class="game-img"></td>
+                            <td>{{ game.name }}</td>
+                            <td>{{ game.regional_price }}</td>
+                            <td>{{ game.usd_price }}</td>
+                            <td>{{ game.price_difference }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <footer class="footer pro-footer">
+        <div class="container">
+            <div class="footer-row">
+                <div class="footer-links">
+                    <p class="footer-credit">Made with <span style="color:#e25555">&#9829;</span> for Steam gamers &mdash;</span>
+                    <a href="https://github.com/Asharax/steam-get-price-dif/" target="_blank">Github</a>
+                    <span class="footer-divider">|</span>
+                    <a href="mailto:furkaan.aytan@gmail.com">Contact</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <script>
         var eventSource;
         function updateTable(games) {
