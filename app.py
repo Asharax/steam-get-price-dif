@@ -50,7 +50,7 @@ def progress_stream():
 def submit():
     global result_data
     data = request.get_json()
-    steam_id = data.get('steam_id', 76561198174491595)
+    steam_id = data.get('steam_id')
     thread = Thread(target=calculate_with_progress, args=(steam_id,))
     thread.start()
     thread.join()  # For simplicity, wait for the thread to finish

@@ -93,10 +93,12 @@ def get_wishlisted_result_from_user(steamid, regional_currency, progress_callbac
     if not wish_list_request:
         return {'error': f"Steam ID {steamid} not found or no wishlist data available."}
     data = parse_json(wish_list_request)
+    if not data['response']:
+        return {'error': f"Id is wrong or wishlist is not available."}
 
     wish_listed_games = data['response']['items']
 
-    game_request_limit = 15
+    game_request_limit = 50
     total = min(game_request_limit, len(wish_listed_games))
     for idx,game in enumerate(wish_listed_games):
         if idx>=game_request_limit:
