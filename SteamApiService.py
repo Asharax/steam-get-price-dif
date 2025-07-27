@@ -2,6 +2,9 @@ import json
 import requests
 import logging
 import os
+from sqlalchemy import create_engine, Column, Integer, String, Float, UniqueConstraint
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 error_logs = []
 
@@ -46,13 +49,35 @@ def percentage_difference(global_price: float, regional_price: float) -> float:
 
 
 def get_over_price_amount(appid, regional_curency="tr"):
+    session = Session()
+    # Check cache first
+    cache = session.query(GamePriceCache).filter_by(appid=appid, region=regional_curency).first()
+    if cache:
+        result = {
+            'price_difference': cache.price_difference,
+            'regional_price': cache.regional_price,
+            'usd_price': cache.usd_price
+        }
+        session.close()
+        return result
+    # Not cached, fetch and store
     regional_price = get_currency_price(regional_curency, appid)
     usd_price = get_currency_price("us", appid)
-    result = percentage_difference(usd_price, regional_price)
-    if result == 0:
+    result_val = percentage_difference(usd_price, regional_price)
+    if result_val == 0:
         error_logs.append(appid)
-
-    return {'price_difference': result, 'regional_price': regional_price, 'usd_price': usd_price}
+    # Store in DB
+    cache = GamePriceCache(
+        appid=appid,
+        region=regional_curency,
+        regional_price=regional_price,
+        usd_price=usd_price,
+        price_difference=result_val
+    )
+    session.add(cache)
+    session.commit()
+    session.close()
+    return {'price_difference': result_val, 'regional_price': regional_price, 'usd_price': usd_price}
 
 # Calculates price difference between regional prices and global prices
 # of a game using its steamid, along with other details.
@@ -66,12 +91,12 @@ def get_wishlisted_result_from_user(steamid, regional_currency, progress_callbac
     response = []
 
     if not wish_list_request:
-        return None
+        return {'error': f"Steam ID {steamid} not found or no wishlist data available."}
     data = parse_json(wish_list_request)
 
     wish_listed_games = data['response']['items']
 
-    game_request_limit = 5
+    game_request_limit = 15
     total = min(game_request_limit, len(wish_listed_games))
     for idx,game in enumerate(wish_listed_games):
         if idx>=game_request_limit:
@@ -148,3 +173,21 @@ with open('game_names.json', 'r') as file:
     for game_detail in game_detail_list:
         appid = game_detail['appid']
         GAME_DETAIL_MAP[appid] = game_detail.pop('name')
+
+# SQLAlchemy setup
+Base = declarative_base()
+DB_PATH = os.environ.get('STEAM_PRICE_DB', 'sqlite:///steam_price_cache.db')
+engine = create_engine(DB_PATH)
+Session = sessionmaker(bind=engine)
+
+class GamePriceCache(Base):
+    __tablename__ = 'game_price_cache'
+    id = Column(Integer, primary_key=True)
+    appid = Column(Integer, nullable=False)
+    region = Column(String, nullable=False)
+    regional_price = Column(Float, nullable=False)
+    usd_price = Column(Float, nullable=False)
+    price_difference = Column(Float, nullable=False)
+    __table_args__ = (UniqueConstraint('appid', 'region', name='_appid_region_uc'),)
+
+Base.metadata.create_all(engine)

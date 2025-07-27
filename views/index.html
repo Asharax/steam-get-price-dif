@@ -132,7 +132,12 @@
                     contentType: 'application/json',
                     data: JSON.stringify({ steam_id: steamId }),
                     success: function(response) {
-                        updateTable(response);
+                        if (response.error) {
+                            hideLoadingBar();
+                            alert(response.error);
+                        } else {
+                            updateTable(response);
+                        }
                     },
                     error: function() {
                         hideLoadingBar();

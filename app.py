@@ -48,14 +48,14 @@ def progress_stream():
 
 @app.route('/', methods=['POST'])
 def submit():
-    """returns the price difference.
-    """
     global result_data
     data = request.get_json()
     steam_id = data.get('steam_id', 76561198174491595)
     thread = Thread(target=calculate_with_progress, args=(steam_id,))
     thread.start()
     thread.join()  # For simplicity, wait for the thread to finish
+    if isinstance(result_data, dict) and result_data.get('error'):
+        return jsonify({'error': result_data['error']}), 400
     return jsonify(result_data)
 
 
