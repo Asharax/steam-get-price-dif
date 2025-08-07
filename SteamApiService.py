@@ -56,28 +56,32 @@ def get_over_price_amount(appid, regional_curency="tr"):
         result = {
             'price_difference': cache.price_difference,
             'regional_price': cache.regional_price,
-            'usd_price': cache.usd_price
+            'usd_price': cache.usd_price,
+            'overpaid_amount': cache.overpaid_amount
         }
         session.close()
         return result
     # Not cached, fetch and store
     regional_price = get_currency_price(regional_curency, appid)
     usd_price = get_currency_price("us", appid)
-    result_val = percentage_difference(usd_price, regional_price)
-    if result_val == 0:
+    overpaid_amount = percentage_difference(usd_price, regional_price)
+    if overpaid_amount == 0:
         error_logs.append(appid)
+    price_dif = round(usd_price - regional_price, 2)
     # Store in DB
     cache = GamePriceCache(
         appid=appid,
         region=regional_curency,
         regional_price=regional_price,
         usd_price=usd_price,
-        price_difference=result_val
+        overpaid_amount=overpaid_amount,
+        price_difference=price_dif
     )
     session.add(cache)
     session.commit()
     session.close()
-    return {'price_difference': result_val, 'regional_price': regional_price, 'usd_price': usd_price}
+
+    return {'overpaid_amount': overpaid_amount, 'regional_price': regional_price, 'usd_price': usd_price, 'price_difference': price_dif }
 
 # Calculates price difference between regional prices and global prices
 # of a game using its steamid, along with other details.
@@ -98,7 +102,7 @@ def get_wishlisted_result_from_user(steamid, regional_currency, progress_callbac
 
     wish_listed_games = data['response']['items']
 
-    game_request_limit = 50
+    game_request_limit = 5
     total = min(game_request_limit, len(wish_listed_games))
     for idx,game in enumerate(wish_listed_games):
         if idx>=game_request_limit:
@@ -190,6 +194,7 @@ class GamePriceCache(Base):
     regional_price = Column(Float, nullable=False)
     usd_price = Column(Float, nullable=False)
     price_difference = Column(Float, nullable=False)
+    overpaid_amount = Column(Float, nullable=False)
     __table_args__ = (UniqueConstraint('appid', 'region', name='_appid_region_uc'),)
 
 Base.metadata.create_all(engine)
